@@ -1,5 +1,6 @@
 require 'json'
 require 'csv'
+require 'sqlite3'
 
 json = File.read('resources/CapabilityStatement-us-core-client.json')
 CapStat = JSON.parse(json)
@@ -60,3 +61,37 @@ end
 
 puts(searchparam)
 File.write('resources/CapabilitySatement_searchParam.csv', searchparam)
+
+# sqllite
+db = SQLite3::Database.new('resources/CapabilityStatement.db')
+rows = db.execute <<-SQL
+  create table interaction (
+    type varchar(30),
+    url varchar(100),
+    valueCode varchar(30),
+    code varchar(30)
+  );
+SQL
+
+
+CSV.parse(interaction, headers: true) do |row|
+  db.execute "insert into interaction values ( ?, ?, ?, ? )", row.fields
+end
+
+db.execute( "select * from interaction limit 3" )
+
+db.execute <<-SQL
+  create table searchparam (
+    type varchar(30),
+    url varchar(100),
+    valueCode varchar(30),
+    name varchar(30),
+    stype varchar(30)
+  );
+SQL
+
+CSV.parse(searchparam, headers: true) do |row|
+  db.execute "insert into searchparam values ( ?, ?, ?, ?, ? )", row.fields
+end
+
+db.execute( "select * from searchparam limit 3" )
