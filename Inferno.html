@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<!-- saved from url=(0022)http://localhost:4567/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Inferno</title>
+    <!-- Required meta tags -->
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="./Inferno_files/bootstrap.min.css">
+    <link rel="stylesheet" href="./Inferno_files/open-iconic-bootstrap.min.css">
+    <link rel="stylesheet" href="./Inferno_files/styles.css">
+    <link rel="icon" href="http://localhost:4567/inferno/static/images/favicon.ico?2.11.0" type="image/x-icon">
+  </head>
+<body>
+<nav class="navbar navbar-expand navbar-light inferno-header" role="banner">
+  <div class="container">
+    <div class="inferno-branding">
+      <a class="navbar-brand" href="/inferno/">
+        <img src="./Inferno_files/inferno_logo.png" alt="Inferno Logo">
+      </a>
+
+      <span class="badge"><div class="card" style="border: 0px;">
+  <div class="card-body" style="
+    padding-bottom: 2px;
+    padding-top: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    border: 0px;
+">
+    <h2><span class="badge badge-primary">Client Tool</span></h2>
+
+    <h6><span class="badge badge-dark">Community</span></h6>
+
+
+  </div>
+</div>
+</span>
+
+
+
+    </div>
+    <!-- Navbar content -->
+
+  </div>
+</nav>
+<script type="text/javascript">
+  if(/MSIE \d|Trident.*rv:/.test(navigator.userAgent))
+    alert('Inferno does not currently support Internet Explorer.  Please switch to another browser, such as Chrome, Firefox, Safari, or Edge.');
+</script>
+
+
+<div class="container">
+  <div class="main index-page">
+
+
+    <h1>Inferno FHIR Client Testing</h1>
+    <div class="headline">
+      <p>
+        Inferno Client Tool is an open source tool that tests whether patients can access their health data. It receives HTTP(S) requests to test your client's conformance to authentication, authorization, and FHIR content standards and reports the results back to you.
+      </p>
+      <p>
+        Please enter a FHIR SERVER URI to begin testing your client software.
+      </p>
+    </div>
+    <form>
+      <fieldset>
+        <legend>Start Testing</legend>
+        <div class="form-group">
+          <label for="fhir_server" class="endpoint-label sr-only">FHIR Server Endpoint</label>
+          <div class="input-group">
+            <input type="url" required="" class="form-control form-control-lg" id="fhir_server" name="fhir_server" placeholder="http://your-fhir-server.org" aria-label="Create App">
+            <div class="input-group-btn">
+              <button class="btn btn-lg btn-secondary" onclick="setURL()">Set</button>
+            </div>
+          </div>
+
+        </div>
+
+
+
+
+
+      </fieldset>
+    </form>
+
+
+
+
+
+
+
+    <div class="alert alert-warning">
+      <span class="oi oi-wrench "></span> This software is under active development.  Please report bugs and submit feature requests as <a href="https://github.com/onc-healthit/inferno/issues" target="_blank">GitHub issues</a>.
+    </div>
+
+
+
+  </div>
+</div>
+
+<!-- global modals -->
+<div class="modal fade" id="ServerStatusModal" tabindex="-1" role="dialog" aria-labelledby="ServerStatusModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ServerStatusModalLabel">Server Configuration</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">×</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="server-state">
+          <h4>Additional ValueSets and CodeSystems</h4>
+          <p>
+            Inferno is capable of validating ValueSet bindings even if they are not expanded within the core FHIR specification.
+            This typically occurs when Implementation Guides provide additional ValueSets, or if the ValueSet is too large to
+            be expanded and provided in the Core FHIR specification. Additionally, Inferno can check codes belong to a CodeSystem that they state membership to.
+            Below is a list of ValueSets and CodeSystems loaded into this runniing instance of Inferno.  Visit
+            <a href="https://github.com/onc-healthit/inferno/wiki/Installing-Terminology-Validators" target="_blank">our wiki</a> to see how to load additional
+            ValueSets and CodeSystems for validation.
+          </p><p>
+
+
+        </p><p>No additional ValueSets or CodeSystems beyond those provided within the Core FHIR specification are loaded.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+    <script>
+       window.basePath = '/inferno';
+    </script>
+<script>
+  function setURL() {
+    let xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+      if (this.readyState === 4 && this.status === 200) {
+        let response = JSON.parse(this.responseText);
+        renderPosts(response);    }
+    }
+    var inputUrl = document.getElementById("fhir_server").value;
+    xhr.open("GET", "http://localhost:9595/fc_config?destination="+ inputUrl);
+    xhr.setRequestHeader("Accept", 'application/json');
+
+    xhr.send();
+  }
+</script>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Tether.js, then Popper.js, then Bootstrap JS -->
+    <script src="./Inferno_files/jquery-3.2.1.min.js"></script>
+    <script src="./Inferno_files/tether.min.js"></script>
+    <script src="./Inferno_files/popper.min.js"></script>
+    <script src="./Inferno_files/bootstrap.min.js"></script>
+    <script src="./Inferno_files/app.js"></script>
+
+  
+
+</body></html>
