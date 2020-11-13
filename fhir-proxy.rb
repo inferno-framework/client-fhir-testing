@@ -3,6 +3,7 @@ require 'json'
 require_relative 'fhir-transaction-db.rb'
 
 class FHIRProxy < Rack::Proxy
+  attr_accessor :config_mode #global var
   def initialize(app = nil, opts = {})
     super(app, opts)
     @streaming = false
