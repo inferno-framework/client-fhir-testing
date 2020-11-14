@@ -5,8 +5,8 @@ Tool to test a client's conformance with a FHIR implementation guide.
 ## Dev Setup:
 The client fhir testing tool is in the form of a proxy application that 
 will record transactions between a fhir client and a fhir server.  These 
-transactions are recorded in a database where tests can be run against the 
-HTTP requests to validate the client requests are valid. The requests 
+HTTP transactions are recorded in a database where validation tests 
+can later be run against them. The requests 
 can also be replayed to mimic client or server endpoints.  <br />
 
 For development purposes we will use the Inferno tool to act as a FHIR 
@@ -26,6 +26,7 @@ https://github.com/onc-healthit/inferno#installation-and-deployment
 ### Run Proxy
 1.  Download this github repo <br />
 `git clone https://github.com/inferno-community/client-fhir-testing.git`
+<br />
 `cd client-fhir-testing`
 
 2.  Run proxy <br />
@@ -44,4 +45,4 @@ to the docker instance and not the host itself.  <br />
 and put in the address of the proxy service <br />
 `http://host.docker.internal:9292`
 
-2.  Run tests, check the database for logged data.
+2.  Run tests, check the database for logged HTTP transactions.
