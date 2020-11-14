@@ -3,6 +3,7 @@ require 'json'
 require_relative 'fhir-transaction-db.rb'
 
 class FHIRProxy < Rack::Proxy
+  attr_accessor :config_mode #global var
   def initialize(app = nil, opts = {})
     super(app, opts)
     @streaming = false
@@ -27,11 +28,33 @@ class FHIRProxy < Rack::Proxy
   end
 
   def rewrite_env(env)
-    env['HTTP_HOST'] = @backend.host
+
     msg_out("#{Time.now} - Rewrite env...")
     # Standard way of tracking http sessions is w/ uuid based header.
     # But I don't think the FHIR server is responding with this header.
     # env['HTTP_X_REQUEST_ID'] = env['HTTP_X_REQUEST_ID'] || SecureRandom.uuid
+
+    # == filter request from UI to configure
+    request = Rack::Request.new(env)
+    if request.path.match('/fc_config')
+      self.config_mode = true
+      @read_timeout = 240
+      @ssl_verify_none = true
+      myArray = request.query_string.split('destination=',2)
+      dst = myArray[1]
+      msg = %(@backend set to: #{dst})
+      if dst && URI(dst).is_a?(URI::HTTP) && dst.include?('http:')
+        @backend = URI(dst)
+        @port = 80
+        msg_out(msg)
+      elsif  dst && URI(dst).is_a?(URI::HTTP) && dst.to_s.include?('https:')
+        @backend = URI(dst)
+        @use_ssl= true
+        #env["HTTP_X_FORWARDED_PROTO"] = 'https'
+        msg_out(msg)
+      end
+    end
+    env['HTTP_HOST'] = @backend.host
     msg_out('  ' + env.to_s, false)
     return env
   end
@@ -44,6 +67,12 @@ class FHIRProxy < Rack::Proxy
       msg_out('  Redirect in response header')
       # headers["Location"]
       # TODO: Do we want to handle redirects?
+    end
+    if self.config_mode  == true
+      # if config mode is true ->
+      # overwrite status, headers, body to proper response based on what has been configured.
+      # As a default Proxy returns status 301. Change it to 200, fill proper header and body to return response back to UI.
+      self.config_mode  = false
     end
     msg_out('  ' + status.to_s, false)
     msg_out('  ' + headers.to_s, false)
