@@ -19,6 +19,7 @@ class FHIRProxy < Rack::Proxy
     # Client -> Proxy (Save req here) -> Server
     # Client <- (Save res here) Proxy <- Server
     new_env = rewrite_env(env)
+    # -> new class validation (env)
     req_id = record_request(new_env)
     res_triple = rewrite_response(perform_request(new_env))
     res_id = record_response(res_triple, req_id)
