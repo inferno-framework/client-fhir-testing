@@ -25,8 +25,7 @@ https://github.com/onc-healthit/inferno#installation-and-deployment
 
 ### Run Proxy
 1.  Download this github repo <br />
-`git clone https://github.com/inferno-community/client-fhir-testing.git`
-<br />
+`git clone https://github.com/inferno-community/client-fhir-testing.git` <br />
 `cd client-fhir-testing`
 
 2.  Run proxy <br />
