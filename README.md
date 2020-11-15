@@ -2,7 +2,7 @@
 Tool to test a client's conformance with a FHIR implementation guide.
 
 
-## Dev Setup:
+## Setup:
 The client fhir testing tool is in the form of a proxy application that 
 will record transactions between a fhir client and a fhir server.  These 
 HTTP transactions are recorded in a database where validation tests 

@@ -45,7 +45,8 @@ class FHIRProxy < Rack::Proxy
       msg = %(@backend set to: #{dst})
       if dst && URI(dst).is_a?(URI::HTTP) && dst.include?('http:')
         @backend = URI(dst)
-        @port = 80
+        # @port shouldn't be needed and would break any http not on standard port
+        # @port = 80
         msg_out(msg)
       elsif  dst && URI(dst).is_a?(URI::HTTP) && dst.to_s.include?('https:')
         @backend = URI(dst)
@@ -82,19 +83,23 @@ class FHIRProxy < Rack::Proxy
 
   def record_request(env)
     request = Rack::Request.new(env)
-    method = env['REQUEST_METHOD']
-    req_uri = env['REQUEST_URI']
-    # TODO: Need to store all non-objects? from env, not just http
-    headers = self.class.extract_http_request_headers(request.env)
+    headers = get_all_headers(env)
     data = request.body.read
-    req_id = @fhir_db.insert_request(method, req_uri, headers.to_json, data.to_s)
+    req_id = @fhir_db.insert_request(headers, data)
     return req_id
   end
 
   def record_response(triplet, req_id)
     status, headers, body = triplet
-    res_id = @fhir_db.insert_response(req_id, status, headers.to_json, body.to_s)
+    res_id = @fhir_db.insert_response(req_id, status, headers, body)
     return res_id
+  end
+
+  def get_all_headers(hash)
+    headers = hash.reject do |k, v|
+      v.nil? || !(v.is_a? String)
+    end
+    return headers
   end
 
   def msg_out(msg, stdout = true, file = true)
