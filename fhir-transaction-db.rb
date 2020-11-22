@@ -36,7 +36,7 @@ class FHIRTransactionDB
     remote_addr = headers['REMOTE_ADDR']
     user_agent = headers['HTTP_USER_AGENT']
     # https://regexr.com/
-    # match the first slash + word after the domain name
+    # match after the first slash + word after the domain name
     # need to pull out the backend first
     # like 'Patient'
     backend = backend.chomp('/')

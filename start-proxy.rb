@@ -24,7 +24,7 @@ rescue Errno::ENOENT
       db: 'fhir-transactions.db'
   }
   File.write(opts_file, proxy_options.to_yaml)
-rescue Exception => e
+rescue StandardError => e
   puts e
 end
 Rack::Server.start(

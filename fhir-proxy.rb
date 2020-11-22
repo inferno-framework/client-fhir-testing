@@ -7,7 +7,7 @@ class FHIRProxy < Rack::Proxy
   def initialize(myopts = {}, app = nil, opts = {})
     super(app, opts)
     @streaming = false
-    File.open('log.txt', 'w') { |f| f.write "#{Time.now} - User logged in\n" }
+    File.open('log.txt', 'w') { |f| f.write "#{Time.now} - Proxy started.\n" }
     parse_myopts(myopts)
     @fhir_db = FHIRTransactionDB.new(@db_name)
   end
@@ -27,8 +27,11 @@ class FHIRProxy < Rack::Proxy
   end
 
   def rewrite_env(env)
+    msg_out("\n#{Time.now} - Rewriting env")
+    oreq = Rack::Request.new(env)
+    msg_out('  client: ' + oreq.ip)
+    msg_out('  request: ' + oreq.request_method + ' ' + oreq.url)
 
-    msg_out("#{Time.now} - Rewrite env...")
     # Standard way of tracking http sessions is w/ uuid based header.
     # But I don't think the FHIR server is responding with this header.
     # env['HTTP_X_REQUEST_ID'] = env['HTTP_X_REQUEST_ID'] || SecureRandom.uuid
@@ -45,6 +48,7 @@ class FHIRProxy < Rack::Proxy
       if dst && URI(dst).is_a?(URI::HTTP) && dst.include?('http:')
         @backend = URI(dst)
         # @port shouldn't be needed and would break any http not on standard port
+        # Whether or not SSL is used is determined by ::Proxy based on http vs https
         # @port = 80
         msg_out(msg)
       elsif  dst && URI(dst).is_a?(URI::HTTP) && dst.to_s.include?('https:')
@@ -55,6 +59,7 @@ class FHIRProxy < Rack::Proxy
       end
     end
     env['HTTP_HOST'] = @backend.host
+    msg_out('  forwarding to: ' + @backend.to_s)
     msg_out('  ' + env.to_s, false)
     return env
   end
@@ -62,11 +67,13 @@ class FHIRProxy < Rack::Proxy
   def rewrite_response(triplet)
     status, headers, body = triplet
     # headers["content-length"] = body.bytesize.to_s
-    msg_out("#{Time.now} - Rewrite response...")
+    msg_out("\n#{Time.now} - Rewriting response")
+    msg_out('  status: ' + status.to_s)
     if headers['Location']
-      msg_out('  Redirect in response header')
-      # headers["Location"]
-      # TODO: Do we want to handle redirects?
+      msg_out("  redirect in response header to #{headers['Location']}")
+      # TODO: Do we want to handle redirects?  As a future item.
+      # Would need to change headers['Location'] to point to proxy
+      # and @backend would need to be updated
     end
     if self.config_mode  == true
       # if config mode is true ->
@@ -74,6 +81,7 @@ class FHIRProxy < Rack::Proxy
       # As a default Proxy returns status 301. Change it to 200, fill proper header and body to return response back to UI.
       self.config_mode  = false
     end
+    msg_out('  returning response to client')
     msg_out('  ' + status.to_s, false)
     msg_out('  ' + headers.to_s, false)
     msg_out('  ' + body.to_s, false)
