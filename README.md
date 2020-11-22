@@ -2,6 +2,12 @@
 Tool to test a client's conformance with a FHIR implementation guide.
 
 
+### Quick Run:
+```sh
+ruby start-proxy.rb
+```
+<br/>
+
 ## Setup:
 The client fhir testing tool is in the form of a proxy application that 
 will record transactions between a fhir client and a fhir server.  These 
