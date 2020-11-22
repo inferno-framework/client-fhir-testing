@@ -84,7 +84,7 @@ class FHIRProxy < Rack::Proxy
     request = Rack::Request.new(env)
     headers = get_all_headers(env)
     data = request.body.read
-    req_id = @fhir_db.insert_request(headers, data)
+    req_id = @fhir_db.insert_request(headers, data, @backend.to_s)
     return req_id
   end
 

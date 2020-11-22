@@ -30,15 +30,18 @@ class FHIRTransactionDB
     @db.execute(sql)
   end
 
-  def insert_request(headers, data)
+  def insert_request(headers, data, backend)
     request_method = headers['REQUEST_METHOD']
     request_uri = headers['REQUEST_URI']
     remote_addr = headers['REMOTE_ADDR']
     user_agent = headers['HTTP_USER_AGENT']
     # https://regexr.com/
     # match the first slash + word after the domain name
-    # like '/Patient'
-    m = headers['REQUEST_URI'].match(%r{^(/[^/\?]+)/*.*$})
+    # need to pull out the backend first
+    # like 'Patient'
+    backend = backend.chomp('/')
+    removed_backend = headers['REQUEST_URI'].sub(/#{Regexp.escape(backend)}/, '')
+    m = removed_backend.match(%r{^/([^/\?]+)/*.*$})
     fhir_action = m[1]
     sql = %{
       INSERT INTO requests
