@@ -34,12 +34,15 @@ cd client-fhir-testing
 ```
 2.  Run proxy
 
-The following will read options from `proxy.yml`.  If the `proxy.yml` file does 
+The following will read options from `filename`.  If `filename` does 
 not exist, 
-one with default options will be created for you.  It is important to set `backend` 
+one with default options will be created for you.  If `filename` is left unspecified, 
+`proxy.yml` will be used by default.
+
+It is important to set the `backend` 
 config option as this is the destination the proxy forwards to.
 ```sh
-ruby start-proxy.rb
+ruby start-proxy.rb [filename]
 ```
 
 Alternatively, you can start the proxy via the rackup process and specify the 
