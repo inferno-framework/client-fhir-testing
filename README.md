@@ -27,19 +27,27 @@ docker-compose up
 
 
 ### Run Proxy
-1.  Download this github repo <br />
-
+1.  Download this github repo
 ```sh
 git clone https://github.com/inferno-community/client-fhir-testing.git
 cd client-fhir-testing
 ```
+2.  Run proxy
 
-2.  Run proxy <br />
+The following will read options from `proxy.yml`.  If the `proxy.yml` file does 
+not exist, 
+one with default options will be created for you.  It is important to set `backend` 
+config option as this is the destination the proxy forwards to.
+```sh
+ruby start-proxy.rb
+```
+
+Alternatively, you can start the proxy via the rackup process and specify the 
+backend as an environment variable.
+
 ```sh
 FHIR_PROXY_BACKEND="https://r4.smarthealthit.org" rackup config.ru -p 9292 -o 0.0.0.0
 ```
-The shell environment variable FHIR_PROXY_BACKEND should be set to the 
-FHIR server that the proxy will forward requests to.
 
 ### Run Inferno tests
 We use inferno as our client but you can use any client/server interactions 
