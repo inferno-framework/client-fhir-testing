@@ -3,13 +3,13 @@ require 'json'
 require_relative 'fhir-transaction-db.rb'
 
 class FHIRProxy < Rack::Proxy
-  attr_accessor :config_mode #global var
-  def initialize(app = nil, opts = {})
+  attr_accessor :config_mode # global var
+  def initialize(myopts = {}, app = nil, opts = {})
     super(app, opts)
     @streaming = false
     File.open('log.txt', 'w') { |f| f.write "#{Time.now} - User logged in\n" }
-    set_backend_or_die
-    @fhir_db = FHIRTransactionDB.new('fhir-transactions.db')
+    parse_myopts(myopts)
+    @fhir_db = FHIRTransactionDB.new(@db_name)
   end
 
   def call(env)
@@ -20,7 +20,6 @@ class FHIRProxy < Rack::Proxy
     # Client -> Proxy (Save req here) -> Server
     # Client <- (Save res here) Proxy <- Server
     new_env = rewrite_env(env)
-    # -> new class validation (env)
     req_id = record_request(new_env)
     res_triple = rewrite_response(perform_request(new_env))
     res_id = record_response(res_triple, req_id)
@@ -51,7 +50,7 @@ class FHIRProxy < Rack::Proxy
       elsif  dst && URI(dst).is_a?(URI::HTTP) && dst.to_s.include?('https:')
         @backend = URI(dst)
         @use_ssl= true
-        #env["HTTP_X_FORWARDED_PROTO"] = 'https'
+        # env["HTTP_X_FORWARDED_PROTO"] = 'https'
         msg_out(msg)
       end
     end
@@ -108,16 +107,18 @@ class FHIRProxy < Rack::Proxy
     File.write('log.txt', "#{msg} \n", mode: 'a') if file
   end
 
-  def set_backend_or_die
-    dst = ENV['FHIR_PROXY_BACKEND']
-    if dst && URI(dst).is_a?(URI::HTTP)
-      @backend = URI(dst)
-      msg_out("@backend set to: #{dst}")
+  def parse_myopts(myopts)
+    @db_name = myopts[:db] || 'fhir-transactions.db'
+    backend_str = ENV['FHIR_PROXY_BACKEND'] if ENV['FHIR_PROXY_BACKEND']
+    backend_str = myopts[:backend] if myopts[:backend]
+    if backend_str && URI(backend_str).is_a?(URI::HTTP)
+      @backend = URI(backend_str)
+      msg_out("@backend set to: #{@backend}")
     else
       msg = <<~HELP_DOC
-        FHIR_PROXY_BACKEND environment variable not set or bad URI.
-        Please specify proxy destination.
-        Example: FHIR_PROXY_BACKEND="https://r4.fhir-server-dest.com" rackup config.ru -p 9292 -o 0.0.0.0
+        Proxy 'backend' config option not set or bad URI.
+        Please specify proxy destination via proxy.yml file or environment variable FHIR_PROXY_BACKEND
+        Example: "https://r4.smarthealthit.org"
       HELP_DOC
       msg_out(msg)
       exit(1)
