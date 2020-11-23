@@ -25,3 +25,14 @@ class SearchParam
   property :stype, String
 end
 
+class SearchCriteria
+  include DataMapper::Resource
+
+  property :id, Serial
+  property :res_type, String
+  property :profiles, String
+  property :searches, String
+  property :includes, String
+  property :revincludes, String
+  property :opterations, String
+end

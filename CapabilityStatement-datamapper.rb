@@ -1,5 +1,6 @@
 require 'json'
 require 'dm-migrations'
+require 'nokogiri'
 require_relative './CapabilityStatement-db'
 
 DataMapper.auto_migrate!
@@ -41,5 +42,23 @@ end
 # int1 = Interaction.all type: 'Patient', valueCode: 'SHOULD'
 # puts(int1[0].code)
 # SearchParam.get(1)
-#
-# extension
+
+# parameter combination
+docs = Nokogiri::HTML(CapStat['text']['div'])
+table = docs.at('.grid')
+
+table.search('tr').each do |tr|
+  cells = tr.search('th, td')
+  # puts(cells)
+  # output cell data
+  cell_array = []
+  cells.each do |cell|
+    cell_array.append(cell.text.strip)
+  end
+  SearchCriteria.create res_type: cell_array[0],
+                          profiles: cell_array[1],
+                          searches: cell_array[2],
+                          includes: cell_array[3],
+                          revincludes: cell_array[4],
+                          opterations: cell_array[5]
+end
