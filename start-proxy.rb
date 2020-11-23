@@ -21,7 +21,7 @@ rescue Errno::ENOENT
       Host: '0.0.0.0',
       Port: 9292,
       backend: 'https://r4.smarthealthit.org',
-      db: 'fhir-transactions.db'
+      db: 'transactions.db'
   }
   File.write(opts_file, proxy_options.to_yaml)
 rescue StandardError => e
