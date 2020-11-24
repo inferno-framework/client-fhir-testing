@@ -4,12 +4,6 @@ require_relative 'parse-transaction'
 require 'json'
 require 'uri'
 
-# https://apievangelist.com/2019/09/18/creating-a-postman-collection-for-the-fast-healthcare-interoperability-resources-fhir-specification/
-# p = Postman.parse_file('resources/fhir_postman.json')
-# filtered = p.filter('method' => 'GET', 'url' => '/.(\/patient\/).*/i')
-# p = JSON.parse(File.read('resources/fhir_postman.json'))
-# p['folders']
-
 # endpoint = 'http://0.0.0.0:9595'
 # back_end = 'http://r4.smarthealthit.orgreq'
 
@@ -31,6 +25,51 @@ class ParseRequest
     @req_params = nil
     @present = 0
     @intCode = nil
+    @actions = nil
+  end
+
+  # get request action/resource
+  # request_action('http://0.0.0.0:9595', Request.get(61))
+  # request_action('http://0.0.0.0:9595', Request.get(71))
+  #def request_action
+  def update
+    # actions
+    path = URI(@endpoint).path
+    action = URI(@req.request_uri).path.sub(path, '').split('/')
+    action -= ['']
+    if action.include?('_history')
+      @actions = [action[0], '_history']
+    else
+      @actions = [action[0]]
+    end
+
+    # search param
+    req_query = URI(@req.request_uri).query
+    unless req_query.nil?
+      @req_params = URI::decode_www_form(req_query).to_h
+    end
+
+    # requst method
+    if @req.request_method == "GET" and @actions.include? '_history'
+      @req_method = 'vread'
+    elsif @req.request_method == "GET" and @req_params != nil
+      @req_method = 'search-type'
+    elsif @req.request_method == "PUT"
+      @req_method = 'update'
+    elsif @req.request_method == "POST"
+      @req_method = 'create'
+    else
+      @req_method = 'read'
+    end
+
+    # interaction
+    int1 = Interaction.last type: @actions[0], code: @req_method
+    if int1.nil?
+      @present = 0
+    else
+      @present = int1.id
+      @intCode = int1.valueCode
+    end
   end
 
   def present
@@ -41,31 +80,12 @@ class ParseRequest
     @intCode
   end
 
-  # get request action/resource
-  # request_action('http://0.0.0.0:9595', Request.get(61))
-  # request_action('http://0.0.0.0:9595', Request.get(71))
-  def request_action
-    path = URI(@endpoint).path
-    action = URI(@req.request_uri).path.sub(path, '').split('/')
-    action -= ['']
-    if action.include?('_history')
-      [action[0], '_history']
-    else
-      [action[0]]
-    end
-  end
-
-  # get search params
-  # request_params(Request.get(61))
-  def request_params_hash
-    req_query = URI(@req.request_uri).query
-    unless req_query.nil?
-      @req_params = URI::decode_www_form(req_query).to_h
-    end
-    @req_params
+  def req_resource
+    @actions[0]
   end
 
   def search_param
+    # @req_param = self.class.request_params_hash
     if @req_params.nil?
       nil
     else
@@ -73,24 +93,8 @@ class ParseRequest
     end
   end
 
-  # get request method
-  def request_method
-    if not @req_params.nil? and @req_params.keys.include? '_history'
-      'vread'
-    else
-      @req.request_method
-    end
-  end
-
-  def interaction_present
-    method_codes = {'GET'=>'create', 'PUT'=>'update', 'POST'=>'create', 'vread'=>'vread'}
-    int1 = Interaction.last type: @req.fhir_action, code: method_codes[@req.request_method]
-    if int1.nil?
-      @present = 0
-    else
-      @present = 1
-      @intCode = int1.valueCode
-    end
+  def req_method
+    @req_method
   end
 
 end
