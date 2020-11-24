@@ -31,7 +31,8 @@ class SearchCriteria
   property :id, Serial
   property :res_type, String
   property :profiles, String
-  property :searches, String
+  property :s_searches, String
+  property :c_searches, String
   property :includes, String
   property :revincludes, String
   property :opterations, String

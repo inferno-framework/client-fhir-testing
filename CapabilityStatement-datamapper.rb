@@ -55,9 +55,24 @@ table.search('tr').each do |tr|
   cells.each do |cell|
     cell_array.append(cell.text.strip)
   end
+
+  next unless cell_array[0] != "Resource Type"
+  #next unless cell_array[0] == "Medication"
+
+  unless cell_array[2] == ""
+    sup_params = cell_array[2].split("\n")
+    s_params = sup_params[0]
+    # puts(sup_params[1])
+    if sup_params[1].nil?
+      c_params = nil
+    else
+      c_params = sup_params[1].gsub("\t", "")
+    end
+  end
   SearchCriteria.create res_type: cell_array[0],
                           profiles: cell_array[1],
-                          searches: cell_array[2],
+                          s_searches: s_params,
+                          c_searches: c_params,
                           includes: cell_array[3],
                           revincludes: cell_array[4],
                           opterations: cell_array[5]
