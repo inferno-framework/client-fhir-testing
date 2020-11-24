@@ -33,6 +33,14 @@ class ParseRequest
     @intCode = nil
   end
 
+  def present
+    @present
+  end
+
+  def intCode
+    @intCode
+  end
+
   # get request action/resource
   # request_action('http://0.0.0.0:9595', Request.get(61))
   # request_action('http://0.0.0.0:9595', Request.get(71))
@@ -67,7 +75,7 @@ class ParseRequest
 
   # get request method
   def request_method
-    if @req_params.keys.include? '_history'
+    if not @req_params.nil? and @req_params.keys.include? '_history'
       'vread'
     else
       @req.request_method
@@ -76,14 +84,13 @@ class ParseRequest
 
   def interaction_present
     method_codes = {'GET'=>'create', 'PUT'=>'update', 'POST'=>'create', 'vread'=>'vread'}
-    int1 = Interaction.last type: req.fhir_action, code: method_codes[req.request_method]
+    int1 = Interaction.last type: @req.fhir_action, code: method_codes[@req.request_method]
     if int1.nil?
       @present = 0
     else
       @present = 1
+      @intCode = int1.valueCode
     end
-    @intCode = @int1.valueCode
   end
-
 
 end

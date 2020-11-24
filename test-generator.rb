@@ -11,9 +11,10 @@ endpoint = URI::HTTP.build(host: opts[:Host], port: opts[:Port])
 
 Request.each do |req|
   re = ParseRequest.new(req, endpoint.to_s)
-  resource = req.fhir_action
-  request_type = req.request_method
+  resource = re.request_action[0]
+  request_type = re.request_method
   search_param = re.search_param
+  re.interaction_present
   present = re.present
   request_id = req.request_id
   res = Response.last request_id: request_id
