@@ -25,15 +25,12 @@ require 'uri'
 
 
 class ParseRequest
-  def initialize(endpoint)
-    @req = Request.last
+  def initialize(req, endpoint)
+    @req = req
     @endpoint = endpoint
-  end
-
-  # get latest request recode by request_uri
-  # get_request_byURI('/Patient?gender=male')
-  def get_request_byURI(request_uri)
-    @req = Request.last(:request_uri.like => request_uri)
+    @req_params = nil
+    @present = 0
+    @intCode = nil
   end
 
   # get request action/resource
@@ -52,17 +49,41 @@ class ParseRequest
 
   # get search params
   # request_params(Request.get(61))
-  def request_params
+  def request_params_hash
     req_query = URI(@req.request_uri).query
-    req_params = nil
     unless req_query.nil?
-      req_params = URI::decode_www_form(req_query).to_h
+      @req_params = URI::decode_www_form(req_query).to_h
     end
-    req_params
+    @req_params
+  end
+
+  def search_param
+    if @req_params.nil?
+      nil
+    else
+      @req_params.keys
+    end
   end
 
   # get request method
   def request_method
-    @req.request_method
+    if @req_params.keys.include? '_history'
+      'vread'
+    else
+      @req.request_method
+    end
   end
+
+  def interaction_present
+    method_codes = {'GET'=>'create', 'PUT'=>'update', 'POST'=>'create', 'vread'=>'vread'}
+    int1 = Interaction.last type: req.fhir_action, code: method_codes[req.request_method]
+    if int1.nil?
+      @present = 0
+    else
+      @present = 1
+    end
+    @intCode = @int1.valueCode
+  end
+
+
 end
