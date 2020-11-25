@@ -30,12 +30,14 @@ Request.each do |req|
   search_valid = nil
   if re.search_param != nil
     search_valid = valid_shall(re.req_resource, re.search_param)
+    search_comb = combine_search(re.req_resource, re.search_param)
   end
 
   CheckList.create resource: resource,
                    request_type: request_type,
                    search_param: search_param,
                    search_valid: search_valid,
+                   search_combination: search_comb,
                    present: present,
                    present_code: present_code,
                    request_id: request_id,
