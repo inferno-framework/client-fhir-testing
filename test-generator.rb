@@ -1,12 +1,13 @@
 require 'yaml'
 require 'uri'
 require 'csv'
+require 'dm-migrations'
 require_relative 'CapabilityStatement-datamapper'
 require_relative 'CapabilityStatement-db'
 require_relative 'checklist-db'
 require_relative 'parse-request'
 require_relative 'validator-search'
-require 'dm-migrations'
+require_relative 'datatypes-check'
 
 opts = YAML.load_file('proxy.yml')
 endpoint = URI::HTTP.build(host: opts[:Host], port: opts[:Port])
@@ -15,6 +16,7 @@ endpoint = URI::HTTP.build(host: opts[:Host], port: opts[:Port])
 DataMapper.auto_upgrade!
 
 include ValidSearch
+include CheckDatatypes
 Request.each do |req|
   re = ParseRequest.new(req, endpoint.to_s)
   re.update
@@ -29,8 +31,19 @@ Request.each do |req|
 
   search_valid = nil
   if re.search_param != nil
-    search_valid = valid_shall(re.req_resource, re.search_param)
+    search_valid = (response_status == "200") and valid_shall(re.req_resource, re.search_param)
     search_comb = combine_search(re.req_resource, re.search_param)
+
+    req_params = re.instance_variable_get(:@req_params)
+    param_type = []
+    req_params.each do |k, v|
+      sp = SearchParam.first type: re.req_resource, name: k
+      if sp.nil?
+        param_type.append(nil)
+      else
+        param_type.append(check_types(v, sp.stype))
+      end
+    end
   end
 
   CheckList.create resource: resource,
@@ -38,6 +51,7 @@ Request.each do |req|
                    search_param: search_param,
                    search_valid: search_valid,
                    search_combination: search_comb,
+                   search_type: param_type,
                    present: present,
                    present_code: present_code,
                    request_id: request_id,
@@ -50,6 +64,7 @@ CheckList.properties.to_a.each do |n|
     cnames.append(n.name.to_s)
 end
 
+puts("Generating report to checklist.csv")
 CSV.open("checklist.csv", "wb") do |csv|
   csv << cnames
   CheckList.each do |cl|

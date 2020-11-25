@@ -13,6 +13,7 @@ class CheckList
   property :search_param, String
   property :search_valid, Boolean
   property :search_combination, String
+  property :search_type, String
   property :present, Integer
   property :present_code, String
   property :request_id, Integer

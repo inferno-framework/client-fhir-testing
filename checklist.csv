@@ -1,8 +1,10 @@
-id,resource,request_type,search_param,search_valid,search_combination,present,present_code,request_id,response_status
-1,Patient,read,,,,138,SHALL,1,200
-2,Patient,vread,,,,139,SHOULD,2,200
-3,Patient,search-type,"[""gender"", ""name""]",true,"[""gender+name""]",137,SHALL,3,200
-4,Patient,create,,,,136,MAY,4,201
-5,Patient,update,,,,140,MAY,5,400
-6,Patient,search-type,"[""gender"", ""birthdate""]",true,[],137,SHALL,6,200
-7,Patient,search-type,"[""id""]",false,,137,SHALL,7,400
+id,resource,request_type,search_param,search_valid,search_combination,search_type,present,present_code,request_id,response_status
+1,Patient,read,,,,,138,SHALL,1,200
+2,Patient,vread,,,,,139,SHOULD,2,200
+3,Patient,search-type,"[""gender"", ""name""]",true,"[""gender+name""]","[true, true]",137,SHALL,3,200
+4,Patient,create,,,,,136,MAY,4,201
+5,Patient,update,,,,,140,MAY,5,400
+6,Patient,search-type,"[""gender"", ""birthdate""]",true,[],"[true, true]",137,SHALL,6,200
+7,Patient,search-type,"[""id""]",false,,[nil],137,SHALL,7,400
+8,Patient,search-type,"[""id"", ""gender""]",false,[],"[nil, true]",137,SHALL,8,400
+9,Patient,search-type,"[""_id""]",true,,[true],137,SHALL,9,200
