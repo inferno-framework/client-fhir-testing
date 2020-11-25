@@ -5,6 +5,7 @@ require_relative 'CapabilityStatement-datamapper'
 require_relative 'CapabilityStatement-db'
 require_relative 'checklist-db'
 require_relative 'parse-request'
+require_relative 'validator-search'
 require 'dm-migrations'
 
 opts = YAML.load_file('proxy.yml')
@@ -13,6 +14,7 @@ endpoint = URI::HTTP.build(host: opts[:Host], port: opts[:Port])
 # DataMapper.auto_migrate!
 DataMapper.auto_upgrade!
 
+include ValidSearch
 Request.each do |req|
   re = ParseRequest.new(req, endpoint.to_s)
   re.update
@@ -25,9 +27,15 @@ Request.each do |req|
   res = Response.last request_id: request_id
   response_status = res.status
 
+  search_valid = nil
+  if re.search_param != nil
+    search_valid = valid_shall(re.req_resource, re.search_param)
+  end
+
   CheckList.create resource: resource,
                    request_type: request_type,
                    search_param: search_param,
+                   search_valid: search_valid,
                    present: present,
                    present_code: present_code,
                    request_id: request_id,
