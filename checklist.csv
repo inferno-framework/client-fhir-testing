@@ -8,3 +8,4 @@ id,resource,request_type,search_param,search_valid,search_combination,search_typ
 7,Patient,search-type,"[""id""]",false,,[nil],137,SHALL,7,400
 8,Patient,search-type,"[""id"", ""gender""]",false,[],"[nil, true]",137,SHALL,8,400
 9,Patient,search-type,"[""_id""]",true,,[true],137,SHALL,9,200
+10,Patient,search-type,"[""_id""]",true,,[false],137,SHALL,10,200
