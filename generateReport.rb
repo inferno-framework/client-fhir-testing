@@ -24,7 +24,14 @@ class ReportGen
 
 
   def generateReport()
-    eval File.read("./test-generator.rb")
+    #todo: need to be able to populate data into check_lists table here.
+    #eval File.read("test-generator.rb")
+    # pid=Process.fork do
+    #   require './test-generator.rb'
+    #   Process.exit
+    # end
+    # ignored, status = Process.waitpid2(pid, Process::WNOHANG)
+    # puts "script.rb PID #{pid} exited, exit status: #{status.exitstatus}"
 
     stm = @db.prepare ("SELECT first_request_id, last_request_id ,dt FROM sessions ORDER BY session_id ASC")
     rs = stm.execute
