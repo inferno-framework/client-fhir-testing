@@ -3,12 +3,14 @@ require 'uri'
 require 'minitest/autorun'
 require_relative 'CapabilityStatement-db'
 require_relative 'parse-transaction'
-
+require_relative 'generateReport'
 
 class Test_req_res < Minitest::Test
   def setup
     @request = Request.get(1)
     @response = Response.get(1)
+    # @rReportGen= ReportGen.new('fhir-transactions.db')
+    # @rReportGen.generateReport
   end
 
   def test_status
@@ -32,6 +34,8 @@ class Test_req_res < Minitest::Test
     patient_id = res_data['entry'][0]['resource']['id']
 
     assert_equal req_param['_id'], patient_id
+
+
   end
 
   def test_resource_type

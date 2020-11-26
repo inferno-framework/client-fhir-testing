@@ -1,15 +1,22 @@
 require 'rack-proxy'
 require 'json'
 require_relative 'fhir-transaction-db.rb'
+require_relative  'generateReport'
 
 class FHIRProxy < Rack::Proxy
-  attr_accessor :config_mode # global var
+  attr_accessor :config_mode, :result_mode ,:record_mode, :landingpage_mode# global var
+
   def initialize(myopts = {}, app = nil, opts = {})
     super(app, opts)
     @streaming = false
     File.open('log.txt', 'w') { |f| f.write "#{Time.now} - Proxy started.\n" }
     parse_myopts(myopts)
     @fhir_db = FHIRTransactionDB.new(@db_name)
+    @reportGen = ReportGen.new(@db_name)
+    self.config_mode= false
+    self.record_mode= false
+    self.result_mode= false
+    self.landingpage_mode = false
   end
 
   def call(env)
@@ -20,10 +27,48 @@ class FHIRProxy < Rack::Proxy
     # Client -> Proxy (Save req here) -> Server
     # Client <- (Save res here) Proxy <- Server
     new_env = rewrite_env(env)
-    req_id = record_request(new_env)
-    res_triple = rewrite_response(perform_request(new_env))
-    res_id = record_response(res_triple, req_id)
-    return res_triple
+    if(self.landingpage_mode)
+      msg_out('  landingpage Mode: ' )
+      self.record_mode = false
+      file = File.open("Inferno.html")
+      status = 200
+      headers = { "Content-Type" => "text/html" }
+      #headers["content-length"] = file.size.to_s(10)
+      bodyHTML = [file.read]
+
+      body = bodyHTML
+      self.landingpage_mode = false
+      [status, headers, body]
+    elsif(self.result_mode)
+      status = 200
+      msg_out('  Result Mode: ' )
+      headers = { "Content-Type" => "application/json" }
+      #headers["content-length"] = file.size.to_s(10)
+      jsonData = @reportGen.generateReport
+      msg_out('  Result Mode: ' + jsonData.to_s)
+      bodyHTML = [jsonData.to_s]
+
+      body = bodyHTML
+      puts body
+      self.result_mode = false
+      [status, headers, body]
+    elsif(self.record_mode)
+      msg_out('  record Mode: ' )
+      req_id = record_request(new_env)
+      res_triple = rewrite_response(perform_request(new_env))
+      res_id = record_response(res_triple, req_id)
+      self.record_mode = false
+      return res_triple
+    else
+      req_id = record_request(new_env)
+      res_triple = rewrite_response(perform_request(new_env))
+      res_id = record_response(res_triple, req_id)
+      return res_triple
+    end
+    # req_id = record_request(new_env)
+    # res_triple = rewrite_response(perform_request(new_env))
+    # res_id = record_response(res_triple, req_id)
+    # return res_triple
   end
 
   def rewrite_env(env)
@@ -45,6 +90,9 @@ class FHIRProxy < Rack::Proxy
 
     # == filter request from UI to configure
     request = Rack::Request.new(env)
+    if request.path.match('/fhirclient')
+      self.landingpage_mode = true
+    end
     if request.path.match('/fc_config')
       self.config_mode = true
       @read_timeout = 240
@@ -65,9 +113,33 @@ class FHIRProxy < Rack::Proxy
         msg_out(msg)
       end
     end
-    env['HTTP_HOST'] = @backend.host
-    msg_out('  forwarding to: ' + @backend.to_s)
-    msg_out('  ' + env.to_s, false)
+    if request.path.match('/fc_result')
+      self.result_mode = true
+      myArray = request.query_string.split('getResults=',2)
+      range = myArray[1]
+      msg = %(getting test result)
+
+      msg_out(msg)
+    end
+    if request.path.match('/fc_startSession')
+
+      myArray = request.query_string.split('setSwitch=',2)
+      flag = myArray[1]
+      if(flag =='on')
+        self.result_mode = true
+        msg = %(Start recording)
+      else
+        self.result_mode = false
+        msg = %(Stop recording)
+      end
+
+      msg_out(msg)
+    end
+    if self.config_mode != true
+      env['HTTP_HOST'] = @backend.host
+      msg_out('  forwarding to: ' + @backend.to_s)
+      msg_out('  ' + env.to_s, false)
+    end
     return env
   end
 
@@ -83,9 +155,18 @@ class FHIRProxy < Rack::Proxy
       # and @backend would need to be updated
     end
     if self.config_mode  == true
-      # if config mode is true ->
+      msg_out('  config mode: ')
+
+      # if config mode is triprue ->
       # overwrite status, headers, body to proper response based on what has been configured.
       # As a default Proxy returns status 301. Change it to 200, fill proper header and body to return response back to UI.
+      # if status == 401
+      #   file = File.open("inferno.html")
+      #   msg_out(triplet[0])
+      #   msg_out(triplet[1])
+      #   triplet[0] = 200
+      # end
+
       self.config_mode  = false
     end
     msg_out('  returning response to client')

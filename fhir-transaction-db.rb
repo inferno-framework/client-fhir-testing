@@ -28,6 +28,16 @@ class FHIRTransactionDB
       );
     }
     @db.execute(sql)
+    sql = %{
+      CREATE TABLE IF NOT EXISTS sessions (
+        session_id INTEGER PRIMARY KEY,
+        first_request_id INTEGER NOT NULL,
+        last_request_id INTEGER NOT NULL,
+        dt DATETIME default (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW'))
+      );
+    }
+    ret = @db.execute(sql)
+    result = ret
   end
 
   def insert_request(headers, data, backend)
