@@ -39,10 +39,15 @@ class FHIRTransactionDB
     # match after the first slash + word after the domain name
     # need to pull out the backend first
     # like 'Patient'
-    backend = backend.chomp('/')
-    removed_backend = headers['REQUEST_URI'].sub(/#{Regexp.escape(backend)}/, '')
+    str_to_rm = URI(backend).path.chomp('/')
+    removed_backend = headers['REQUEST_URI'].sub(/#{Regexp.escape(str_to_rm)}/, '')
     m = removed_backend.match(%r{^/([^/\?]+)/*.*$})
-    fhir_action = m[1]
+    if m.nil? || m[1].nil?
+      # no regex match for action
+      fhir_action = "unknown"
+    else
+      fhir_action = m[1]
+    end
     sql = %{
       INSERT INTO requests
       (request_method, fhir_action, request_uri, remote_addr, user_agent, headers, data)

@@ -31,10 +31,17 @@ class FHIRProxy < Rack::Proxy
     oreq = Rack::Request.new(env)
     msg_out('  client: ' + oreq.ip)
     msg_out('  request: ' + oreq.request_method + ' ' + oreq.url)
+    # TODO: Not sure if we need to handle query string encoding...
+    # ::Proxy uses Rack::Request.new(env).fullpath to create request to backend
+    # .fullpath pulls from ENV['QUERY_STRING']
+    # if QUERY_STRING needs to be encoded, we need to encode it bc ::Proxy does not
+    # We encode the request here, but we record in the db the unencoded form ['REQUEST_URI']
 
-    # Standard way of tracking http sessions is w/ uuid based header.
-    # But I don't think the FHIR server is responding with this header.
-    # env['HTTP_X_REQUEST_ID'] = env['HTTP_X_REQUEST_ID'] || SecureRandom.uuid
+    # params_encoded = URI.encode_www_form(oreq.params)
+    # if env['QUERY_STRING'] != params_encoded
+    #   env['QUERY_STRING'] = params_encoded
+    #   msg_out('  encoding query string: ' + env['QUERY_STRING'])
+    # end
 
     # == filter request from UI to configure
     request = Rack::Request.new(env)
