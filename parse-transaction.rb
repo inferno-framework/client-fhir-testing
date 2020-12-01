@@ -1,8 +1,8 @@
 require 'dm-core'
 require 'yaml'
 
-opts = YAML.load_file('proxy.yml')
-DataMapper.setup :default, "sqlite://#{Dir.pwd}/" + opts[:db]
+opts = YAML.load_file(File.join(File.dirname(__FILE__), 'proxy.yml'))
+DataMapper.setup :default, "sqlite://#{File.dirname(__FILE__)}/" + opts[:db]
 # DataMapper.setup :default, "sqlite://#{Dir.pwd}/fhir-transactions.db"
 
 class Request

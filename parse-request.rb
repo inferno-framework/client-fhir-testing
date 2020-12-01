@@ -1,5 +1,5 @@
-require_relative 'CapabilityStatement-db'
-require_relative 'parse-transaction'
+require_relative './CapabilityStatement-db'
+require_relative './parse-transaction'
 # require 'postman-ruby'
 require 'json'
 require 'uri'

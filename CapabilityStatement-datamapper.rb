@@ -6,7 +6,8 @@ require_relative './CapabilityStatement-db'
 DataMapper.auto_migrate!
 DataMapper.auto_upgrade!
 
-json = File.read('resources/CapabilityStatement-us-core-client.json')
+CSfile = File.join(File.dirname(__FILE__), 'resources', 'CapabilityStatement-us-core-client.json')
+json = File.read(CSfile)
 CapStat = JSON.parse(json)
 
 # Interaction summary table

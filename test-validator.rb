@@ -2,14 +2,14 @@ require 'yaml'
 require 'uri'
 require 'csv'
 require 'dm-migrations'
-require_relative 'CapabilityStatement-datamapper'
-require_relative 'CapabilityStatement-db'
-require_relative 'checklist-db'
-require_relative 'parse-request'
-require_relative 'validator-search'
-require_relative 'datatypes-check'
+require_relative './CapabilityStatement-datamapper'
+require_relative './CapabilityStatement-db'
+require_relative './checklist-db'
+require_relative './parse-request'
+require_relative './validator-search'
+require_relative './datatypes-check'
 
-opts = YAML.load_file('proxy.yml')
+opts = YAML.load_file(File.join(File.dirname(__FILE__), 'proxy.yml'))
 endpoint = URI::HTTP.build(host: opts[:Host], port: opts[:Port])
 
 # DataMapper.auto_migrate!
@@ -26,7 +26,8 @@ Request.each do |req|
   present = re.present
   present_code = re.intCode
   request_id = req.request_id
-  res = Response.last request_id: request_id
+  request_uri = req.request_uri
+  res = Response.last request_id: req.request_id
   response_status = res.status
 
   search_valid = nil
@@ -55,6 +56,7 @@ Request.each do |req|
                    present: present,
                    present_code: present_code,
                    request_id: request_id,
+                   request_uri: request_uri,
                    response_status: response_status
 end
 

@@ -1,8 +1,8 @@
 require 'dm-core'
 require 'yaml'
 
-opts = YAML.load_file('proxy.yml')
-DataMapper.setup :default, "sqlite://#{Dir.pwd}/" + opts[:db]
+opts = YAML.load_file(File.join(File.dirname(__FILE__), 'proxy.yml'))
+DataMapper.setup :default, "sqlite://#{File.dirname(__FILE__)}/" + opts[:db]
 
 class CheckList
   # id: serial number
@@ -14,7 +14,8 @@ class CheckList
   # search_type: Array of boolean. whether each search value is valid for its data type. nil if not 'search-type'.
   # present: The matched serial id in the interaction table.
   # present_code: The matched interaction Code (SHALL/SHOULD/MAY) in the interaction table.
-  # request_id: The original request id in the request table from database.
+  # request_id: The original request ID from the request table in the database.
+  # request_uri: The original request uri from the test requests.
   # response_status: The response status from server in the response table from database.
 
   include DataMapper::Resource
@@ -29,5 +30,6 @@ class CheckList
   property :present, Integer
   property :present_code, String
   property :request_id, Integer
+  property :request_uri, String
   property :response_status, Integer
 end
