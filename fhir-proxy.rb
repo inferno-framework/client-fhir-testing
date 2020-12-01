@@ -8,6 +8,12 @@ class FHIRProxy < Rack::Proxy
 
   def initialize(myopts = {}, app = nil, opts = {})
     super(app, opts)
+    time = Time.new
+    #set 'time' equal to the current time.
+    time = time.hour.to_s + ":" + time.min.to_s
+    @startTime = time
+    @startId = 0
+    @endId = 0
     @streaming = false
     File.open('log.txt', 'w') { |f| f.write "#{Time.now} - Proxy started.\n" }
     parse_myopts(myopts)
@@ -128,11 +134,32 @@ class FHIRProxy < Rack::Proxy
       myArray = request.query_string.split('setSwitch=',2)
       flag = myArray[1]
       if(flag =='on')
-        self.result_mode = true
+        self.record_mode = true
         msg = %(Start recording)
+        date = Time.new
+        #set 'date' equal to the current date/time.
+
+        date = date.day.to_s + "/" + date.month.to_s + "/" + date.year.to_s
+        time = Time.new
+        #set 'time' equal to the current time.
+        time = time.hour.to_s + ":" + time.min.to_s
+        @startTime = date + " " + time
+        @startId = @reportGen.getCountSessionID
+        puts @startId
       else
-        self.result_mode = false
+        self.record_mode = false
         msg = %(Stop recording)
+        @endId = @reportGen.getCountSessionID
+        puts @endId
+        startnum = @startId
+        endnum = @endId
+        if ( endnum - startnum > 0  )
+          msg = %(Adding session record)
+          @reportGen.insertSession(@startId, @endId,@startTime )
+        else
+          msg = %(No transactions to record)
+        end
+
       end
 
       msg_out(msg)

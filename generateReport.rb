@@ -21,7 +21,34 @@ class ReportGen
     puts e
   end
 
+  def getCountSessionID()
+    stm = @db.prepare ("SELECT count(request_id) as count FROM requests")
+    rs = stm.execute
+    resultSet = rs.next
+    puts resultSet
+  rescue SQLite3::Exception => e
 
+    puts "Exception occurred"
+    puts e
+
+  ensure
+    stm.close if stm
+
+    ret = resultSet['count']
+    puts ret
+    return ret
+  end
+
+  def insertSession(start_id,last_id,dt)
+    sql = %{
+      INSERT INTO sessions
+      (first_request_id, last_request_id, dt)
+      VALUES
+      (?, ?, ?);
+    }
+    ins = @db.prepare(sql)
+    ins.execute(start_id, last_id, dt)
+  end
 
   def generateReport()
     #todo: need to be able to populate data into check_lists table here.
@@ -85,8 +112,9 @@ class ReportGen
       stmRepo = @db.prepare ("SELECT * FROM check_lists WHERE request_id >= ? and request_id <= ? and resource = ? and request_type = ? ")
       stmRepo.bind_params start, last, i['res_type'], 'search-type'
       rst = stmRepo.execute
-
+      cnt =0
       while (resultSet2 = rst.next) do
+        cnt = cnt + 1
         r_hash = Hash.new
 
         r_hash[:search_param]=resultSet2['search_param']
@@ -97,7 +125,11 @@ class ReportGen
         i_hash[:TestResult]<< r_hash
         puts resultSet2
       end
-
+      if cnt < 1
+        r_hash = Hash.new
+        r_hash[:no_match_found]="No search transaction found during recording sesion."
+        i_hash[:TestResult]<< r_hash
+      end
       s_hash[:Records]<<i_hash
 
     end
