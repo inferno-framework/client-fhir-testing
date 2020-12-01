@@ -11,7 +11,8 @@ require_relative './validator-search'
 require_relative './datatypes-check'
 
 class TestValidator
-
+  include ValidSearch
+  include CheckDatatypes
   def initialize(file_name = 'data.db')
     @db = SQLite3::Database.new(file_name)
   end
@@ -23,8 +24,7 @@ class TestValidator
     # DataMapper.auto_migrate!
     DataMapper.auto_upgrade!
 
-    include ValidSearch
-    include CheckDatatypes
+
     Request.each do |req|
       re = ParseRequest.new(req, endpoint.to_s)
       re.update
