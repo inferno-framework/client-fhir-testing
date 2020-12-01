@@ -2,7 +2,7 @@ require 'rack-proxy'
 require 'json'
 require_relative 'fhir-transaction-db.rb'
 require_relative  'generateReport'
-
+require_relative 'test-validator-gen'
 class FHIRProxy < Rack::Proxy
   attr_accessor :config_mode, :result_mode ,:record_mode, :landingpage_mode# global var
 
@@ -13,6 +13,7 @@ class FHIRProxy < Rack::Proxy
     parse_myopts(myopts)
     @fhir_db = FHIRTransactionDB.new(@db_name)
     @reportGen = ReportGen.new(@db_name)
+    @validator = TestValidator.new(@db_name)
     self.config_mode= false
     self.record_mode= false
     self.result_mode= false
@@ -44,6 +45,7 @@ class FHIRProxy < Rack::Proxy
       msg_out('  Result Mode: ' )
       headers = { "Content-Type" => "application/json" }
       #headers["content-length"] = file.size.to_s(10)
+      @validator.run_vaildation
       jsonData = @reportGen.generateReport
       msg_out('  Result Mode: ' + jsonData.to_s)
       bodyHTML = [jsonData.to_s]
