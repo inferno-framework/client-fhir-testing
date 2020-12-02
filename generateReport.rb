@@ -127,13 +127,14 @@ class ReportGen
       end
       if cnt < 1
         r_hash = Hash.new
-        r_hash[:no_match_found]="No search transaction found during recording sesion."
+        r_hash[:no_match_found]="No search transaction found during recording session."
         i_hash[:TestResult]<< r_hash
       end
       s_hash[:Records]<<i_hash
 
     end
     puts JSON.generate(s_hash)
+
     returnJson = JSON.generate(s_hash)
 
 

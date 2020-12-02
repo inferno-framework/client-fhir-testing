@@ -3,6 +3,7 @@ require 'json'
 require_relative 'fhir-transaction-db.rb'
 require_relative  'generateReport'
 require_relative 'test-validator-gen'
+require_relative 'data-Mapper'
 class FHIRProxy < Rack::Proxy
   attr_accessor :config_mode, :result_mode ,:record_mode, :landingpage_mode# global var
 
@@ -19,6 +20,8 @@ class FHIRProxy < Rack::Proxy
     parse_myopts(myopts)
     @fhir_db = FHIRTransactionDB.new(@db_name)
     @reportGen = ReportGen.new(@db_name)
+    @fcDataMapper = FCDataMapper.new(@db_name)
+    @fcDataMapper.mapJsonData
     @validator = TestValidator.new(@db_name)
     self.config_mode= false
     self.record_mode= false
@@ -149,7 +152,7 @@ class FHIRProxy < Rack::Proxy
       else
         self.record_mode = false
         msg = %(Stop recording)
-        @endId = @reportGen.getCountSessionID
+        @endId = @reportGen.getCountSessionID + 1
         puts @endId
         startnum = @startId
         endnum = @endId
@@ -233,7 +236,7 @@ class FHIRProxy < Rack::Proxy
   end
 
   def parse_myopts(myopts)
-    @db_name = myopts[:db] || 'fhir-transactions.db'
+    @db_name = myopts[:db] || 'transactions.db'
     backend_str = ENV['FHIR_PROXY_BACKEND'] if ENV['FHIR_PROXY_BACKEND']
     backend_str = myopts[:backend] if myopts[:backend]
     if backend_str && URI(backend_str).is_a?(URI::HTTP)
