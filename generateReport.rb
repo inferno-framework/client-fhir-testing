@@ -121,7 +121,13 @@ class ReportGen
         r_hash[:present_code]=resultSet2['present_code']
         r_hash[:request_id]=resultSet2['request_id']
         r_hash[:response_status]=resultSet2['response_status']
+        if (resultSet2['search_valid'] == 't')
+          resultSet2['search_valid'] = 'TRUE'
+        else
+          resultSet2['search_valid'] = 'FALSE'
+        end
         r_hash[:search_valid]=resultSet2['search_valid']
+        r_hash[:search_valid]=resultSet2['request_uri']
         i_hash[:TestResult]<< r_hash
         puts resultSet2
       end
