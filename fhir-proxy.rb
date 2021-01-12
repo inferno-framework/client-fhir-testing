@@ -169,6 +169,8 @@ class FHIRProxy < Rack::Proxy
     end
     if self.config_mode != true
       env['HTTP_HOST'] = @backend.host
+      env['REQUEST_PATH'] = @backend.path + request.fullpath
+      env['PATH_INFO'] = @backend.path + request.fullpath
       msg_out('  forwarding to: ' + @backend.to_s)
       msg_out('  ' + env.to_s, false)
     end
