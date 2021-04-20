@@ -100,9 +100,9 @@ The [client CapabilityStatement JSON file](resources/CapabilityStatement-us-core
 [searchParam](resources/CapabilitySatement_searchParam.csv), and [search_criteria](resources/CapabilitySatement_search_criteria.csv).
 Capabilities rules from the three tables were used to validate the client requests.
 
-To run the validator for logged requests:
+To run the validator for logged requests, from the root project folder:
 ```sh
-ruby ../test-validator.rb
+ruby test-validator.rb
 ```
 A `checklist.csv` report will be generated and a `check_list` table will be created in the database.
 Here is the description of the report.
