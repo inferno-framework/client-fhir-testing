@@ -1,46 +1,40 @@
 # client-fhir-testing
-Tool to test a client's conformance with a FHIR implementation guide.
-
+Tool to test a client's conformance with a FHIR implementation guide. 
+The client fhir testing tool is in the form of a proxy application that
+records transactions between a fhir client and a fhir server. 
+These HTTP transactions are recorded in a database where validation 
+tests can later be run against them. The requests can also be replayed
+to mimic client or server endpoints.
 
 ### Quick Run:
 ```sh
 ruby start-proxy.rb
 ```
-<br/>
 
-## Setup:
-The client fhir testing tool is in the form of a proxy application that 
-will record transactions between a fhir client and a fhir server.  These 
-HTTP transactions are recorded in a database where validation tests 
-can later be run against them. The requests 
-can also be replayed to mimic client or server endpoints.  <br />
+## Requirements
+* [Ruby](https://www.ruby-lang.org/en/documentation/installation/)
+* [Bundler for Ruby](https://bundler.io/), a dependency manager
 
-For development purposes we will use the Inferno tool to act as a FHIR 
-client and a public endpoint will be used as a FHIR server.
-
-### Install & Run Inferno (Client)
-1.  Download & install inferno using Docker directions: <br />
-https://github.com/onc-healthit/inferno#installation-and-deployment
-
-2.  Make sure docker desktop app is running
-
-3.  Run 
+## Setup
+From the command line:
 ```sh
-docker-compose up
+# Clone the repository
+git clone https://github.com/inferno-community/client-fhir-testing.git
+
+# Go into the repository
+cd client-fhir-testing
+
+# Install dependencies using bundler
+bundle install
+
 ```
 
-4.  open http://localhost:4567/
-
+## Usage
+Once the proxy is running, requests from the client can be sent to the proxy which will be recorded and forwarded to the server.
+In a separate command line window, the validator can be run to check the compliance of saved requests to an implementation guide. Currently, the validator is only capable of verifying compliance based on the [US Core Client CapabilityStatement](https://www.hl7.org/fhir/us/core/CapabilityStatement-us-core-client.htm). 
 
 ### Run Proxy
-1.  Download this github repo
-```sh
-git clone https://github.com/inferno-community/client-fhir-testing.git
-cd client-fhir-testing
-```
-2.  Run proxy
-
-The following will read options from `filename`.  If `filename` does 
+The following will start the proxy and read options from `filename`.  If `filename` does 
 not exist, 
 one with default options will be created for you.  If `filename` is left unspecified, 
 `proxy.yml` will be used by default.
@@ -58,43 +52,60 @@ backend as an environment variable.
 FHIR_PROXY_BACKEND="https://r4.smarthealthit.org" rackup config.ru -p 9292 -o 0.0.0.0
 ```
 
-### Run Inferno tests
-We use inferno as our client but you can use any client/server interactions 
-in this step. Note that the docker URL listed below resolves to the docker 
+### Examples of Sending Requests
+
+#### Using Inferno
+
+For development purposes the Inferno tool can act as a FHIR 
+client and a public endpoint will be used as a FHIR server.
+
+To use Inferno:
+1. Download & install inferno using Docker directions: <br />
+https://github.com/onc-healthit/inferno#installation-and-deployment
+2. Make sure docker desktop app is running
+3. Run 
+```sh
+docker-compose up
+```
+4. Open http://localhost:4567/
+
+Once Inferno and the proxy are running, we can use Inferno as our client and run the tests offered on it. To do so:
+
+1.  On the Inferno homepage(http://localhost:4567/), under "Start Testing", select "US Core v3.1.0", 
+and put in the address of the proxy service `http://host.docker.internal:9292`. Note that the docker URL listed below resolves to the docker 
 host machine on which the proxy is running.  Using localhost would refer 
-to the docker instance and not the host itself.  <br />
+to the docker instance and not the host itself.
 
-1.  On the Inferno homepage, under "Start Testing", select "US Core v3.1.0", 
-and put in the address of the proxy service `http://host.docker.internal:9292`
+2. Run tests. The database can be checked for logged HTTP transactions.
 
-2.  Run tests, check the database for logged HTTP transactions.
+#### Using Postman Requests
+We created a [collection of Postman requests](test/fhir-client-test.postman_collection.json) to simulate a client test.
+The tool [newman](https://www.npmjs.com/package/newman) can be used to send the collection of requests to the proxy server.
 
-## Run Validator in command line
-The validator is developed based on the [US Core Client CapabilityStatement](https://www.hl7.org/fhir/us/core/CapabilityStatement-us-core-client.htm). 
+With newman installed and the proxy running, in a separate command line window:
+```sh
+# Go to the test directory within the repository
+cd test
+
+# Run the collection of requests
+newman run fhir-client-test.postman_collection.json
+```
+
+The database can be checked for the logged HTTP transactions.
+
+
+### Run Validator in command line
+Once there are logged transactions, the validator can be run to test conformance. The validator is developed based on the [US Core Client CapabilityStatement](https://www.hl7.org/fhir/us/core/CapabilityStatement-us-core-client.htm). 
 The [client CapabilityStatement JSON file](resources/CapabilityStatement-us-core-client.json) was parsed into three tables, [interaction](resources/CapabilityStatement_interaction.csv), 
 [searchParam](resources/CapabilitySatement_searchParam.csv), and [search_criteria](resources/CapabilitySatement_search_criteria.csv).
 Capabilities rules from the three tables were used to validate the client requests.
 
-We created a [collection of Postman requests](test/fhir-client-test.postman_collection.json) to simulate a client test.
-The tool [newman](https://www.npmjs.com/package/newman) can be used to send the collection of requests to the proxy server.
-
-1. To start the proxy server locally with the port 9292.
-```sh
-ruby start-proxy.rb
-```
-
-2. To send the requests with [newman](https://www.npmjs.com/package/newman) under the test directory.
-```sh
-cd test
-newman run fhir-client-test.postman_collection.json
-```
-
-3. To run validator for the collection of requests.
+To run the validator for logged requests:
 ```sh
 ruby ../test-validator.rb
 ```
-A `checklist.csv` report will be generated and also a `check_list` table created in the database.
-Here are the description of the report.
+A `checklist.csv` report will be generated and a `check_list` table will be created in the database.
+Here is the description of the report.
 
 | column | description  |
 |---|---|
