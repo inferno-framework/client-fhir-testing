@@ -1,5 +1,6 @@
 require 'dm-core'
 require 'yaml'
+require_relative './CapabilityStatement-db'
 
 opts = YAML.load_file(File.join(File.dirname(__FILE__), 'proxy.yml'))
 DataMapper.setup :default, "sqlite://#{File.dirname(__FILE__)}/" + opts[:db]
@@ -21,3 +22,4 @@ class CheckList
   property :expectation_met, Boolean
   property :request_ids, String
 end
+

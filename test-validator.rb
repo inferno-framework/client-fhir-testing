@@ -19,18 +19,23 @@ include ValidSearch
 include CheckDatatypes
 
 # Get info from Interaction table to fill out Checklist table
-Interaction.each do |n|
-  resource = n.type #FHIR resource
-  interaction = n.code # interaction: read / vread / update / create / search-type
-  conformance_expectation = n.valueCode # interaction Code (SHALL/SHOULD/MAY)
-  expectation_met = false # boolean, parameter in list and response status is 200, default to False
-  request_ids = '' # Requests that demonstrated the requirement, default to none/empty string
-  CheckList.create resource: resource,
-                   interaction: interaction,
-                   conformance_expectation: conformance_expectation,
-                   expectation_met: expectation_met,
-                   request_ids: request_ids
+# quick fix -- only do this if checklist table is empty.
+# TODO: move this somewhere else where it'll only be called once
+if CheckList.count == 0
+  Interaction.each do |n|
+    resource = n.type #FHIR resource
+    interaction = n.code # interaction: read / vread / update / create / search-type
+    conformance_expectation = n.valueCode # interaction Code (SHALL/SHOULD/MAY)
+    expectation_met = false # boolean, parameter in list and response status is 200, default to False
+    request_ids = '' # Requests that demonstrated the requirement, default to none/empty string
+    CheckList.create resource: resource,
+                     interaction: interaction,
+                     conformance_expectation: conformance_expectation,
+                     expectation_met: expectation_met,
+                     request_ids: request_ids
+  end
 end
+
 
 # resource: FHIR resource / action
 # request_type: read / vread / update / create / search-type
@@ -56,22 +61,38 @@ Request.each do |req|
   res = Response.last request_id: req.request_id
   response_status = res.status
 
-  search_valid = nil
-  if re.search_param != nil
-    search_valid = (response_status == "200") and valid_shall(re.req_resource, re.search_param)
-    search_comb = combine_search(re.req_resource, re.search_param)
-
-    req_params = re.instance_variable_get(:@req_params)
-    param_type = []
-    req_params.each do |k, v|
-      sp = SearchParam.first type: re.req_resource, name: k
-      if sp.nil?
-        param_type.append(nil)
-      else
-        param_type.append(check_types(v, sp.stype))
-      end
+  if present != 0
+    record = CheckList.get(present)
+    # TODO: find a better way to store request_ids instead of a string in checklist table
+    # but for now check if this request_id is already listed by
+    # checking substring
+    if !record.request_ids.include? (request_id.to_s + ",")
+      record.request_ids += (request_id.to_s + ",")
     end
+
+    if response_status == "200"
+      record.expectation_met = true
+    end
+    record.save
   end
+
+  # search_valid = nil
+  # if re.search_param != nil
+  #   search_valid = (response_status == "200") and valid_shall(re.req_resource, re.search_param)
+  #   search_comb = combine_search(re.req_resource, re.search_param)
+  #
+  #   req_params = re.instance_variable_get(:@req_params)
+  #   param_type = []
+  #   req_params.each do |k, v|
+  #     sp = SearchParam.first type: re.req_resource, name: k
+  #     if sp.nil?
+  #       param_type.append(nil)
+  #     else
+  #       param_type.append(check_types(v, sp.stype))
+  #     end
+  #   end
+  # end
+
   #
   # CheckList.create resource: resource,
   #                  request_type: request_type,
@@ -91,6 +112,7 @@ cnames = []
 CheckList.properties.to_a.each do |n|
     cnames.append(n.name.to_s)
 end
+
 
 puts("Generating report to checklist.csv")
 CSV.open("checklist.csv", "wb") do |csv|
