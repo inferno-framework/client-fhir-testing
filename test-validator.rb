@@ -17,6 +17,32 @@ DataMapper.auto_upgrade!
 
 include ValidSearch
 include CheckDatatypes
+
+# Get info from Interaction table to fill out Checklist table
+Interaction.each do |n|
+  resource = n.type #FHIR resource
+  interaction = n.code # interaction: read / vread / update / create / search-type
+  conformance_expectation = n.valueCode # interaction Code (SHALL/SHOULD/MAY)
+  expectation_met = false # boolean, parameter in list and response status is 200, default to False
+  request_ids = '' # Requests that demonstrated the requirement, default to none/empty string
+  CheckList.create resource: resource,
+                   interaction: interaction,
+                   conformance_expectation: conformance_expectation,
+                   expectation_met: expectation_met,
+                   request_ids: request_ids
+end
+
+# resource: FHIR resource / action
+# request_type: read / vread / update / create / search-type
+# search_param: Array of search parameters. nil if not 'search-type'.
+# search_valid: boolean, whether search is valid (parameter in SHALL list and response status is 200)
+# search_combination: 1 parameter => nil; >1 parameters & find in the SHALL list => SHALL combinations; >1 parameters & not in the SHALL list => []
+# search_type: Array of boolean. whether each search value is valid for its data type. nil if not 'search-type'.
+# present: The matched serial id in the interaction table.
+# present_code: The matched interaction Code (SHALL/SHOULD/MAY) in the interaction table.
+# request_id: The original request ID from the request table in the database.
+# request_uri: The original request uri from the test requests.
+# response_status: The response status from server in the response table from database.
 Request.each do |req|
   re = ParseRequest.new(req, endpoint.to_s)
   re.update
@@ -46,21 +72,21 @@ Request.each do |req|
       end
     end
   end
-
-  CheckList.create resource: resource,
-                   request_type: request_type,
-                   search_param: search_param,
-                   search_valid: search_valid,
-                   search_combination: search_comb,
-                   search_type: param_type,
-                   present: present,
-                   present_code: present_code,
-                   request_id: request_id,
-                   request_uri: request_uri,
-                   response_status: response_status
+  #
+  # CheckList.create resource: resource,
+  #                  request_type: request_type,
+  #                  search_param: search_param,
+  #                  search_valid: search_valid,
+  #                  search_combination: search_comb,
+  #                  search_type: param_type,
+  #                  present: present,
+  #                  present_code: present_code,
+  #                  request_id: request_id,
+  #                  request_uri: request_uri,
+  #                  response_status: response_status
 end
 
-# export to csv
+# add column names in csv
 cnames = []
 CheckList.properties.to_a.each do |n|
     cnames.append(n.name.to_s)
