@@ -7,11 +7,11 @@ DataMapper.setup :default, "sqlite://#{File.dirname(__FILE__)}/" + opts[:db]
 
 # Checklist table for US Core Client Capability Statements
 # id: serial number
-# resource: FHIR resource / action
+# resource: FHIR resource
 # interaction: read / vread / update / create / search-type
 # conformance expectation: The matched interaction Code (SHALL/SHOULD/MAY) in the interaction table.
-# expectation met: parameter in list and response status is 200
-# request_ids: Requests that demonstrated the requirement
+# expectation met: parameter in list and response status is 200-299
+# request_ids: Requests that demonstrated the requirement was met
 class CheckList
 
   include DataMapper::Resource
