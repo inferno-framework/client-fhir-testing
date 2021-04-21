@@ -110,14 +110,8 @@ Here is the description of the report.
 | column | description  |
 |---|---|
 |id|serial number|
-|resource|FHIR resource / action|
-|request_type|code from the [interaction table](resources/CapabilityStatement_interaction.csv): read / vread / update / create / search-type|
-|search_param|Array of search parameters. nil if not 'search-type'.|
-|search_valid|boolean, whether search is valid (parameter in SHALL list and response status is 200). The SHALL list can be found in the [searchParam](resources/CapabilitySatement_searchParam.csv) table.|
-|search_combination|1 parameter => nil; >1 parameters & find in the SHALL list => SHALL combinations; >1 parameters & not in the SHALL list => []. The combination list can be found in the [search_criteria](resources/CapabilitySatement_search_criteria.csv) table.|
-|search_type|Array of boolean. whether each search value is valid for its data type. nil if not 'search-type'. The search value type can be found in the [searchParam](resources/CapabilitySatement_searchParam.csv) table.|
-|present|The matched serial id in the [interaction](resources/CapabilityStatement_interaction.csv) table.|
-|present_code|The matched [interaction](resources/CapabilityStatement_interaction.csv) Code (SHALL/SHOULD/MAY) in the interaction table.|
-|request_id|The original request ID from the request table in the database.|
-|request_uri|The original request uri from the test requests.|
-|response_status|The response status from server in the response table from database.|
+|resource|FHIR resource|
+|interaction|code from the [interaction table](resources/CapabilityStatement_interaction.csv): read / vread / update / create / search-type|
+|conformance_expectation|The matched [interaction](resources/CapabilityStatement_interaction.csv) Code (SHALL/SHOULD/MAY) in the interaction table.|
+|expectation_met|boolean, whether request is valid and response status is 200-299.|
+|request_ids|List of requests that demonstrate the requirement was met|
