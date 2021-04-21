@@ -51,10 +51,10 @@ backend as an environment variable.
 ```sh
 FHIR_PROXY_BACKEND="https://r4.smarthealthit.org" rackup config.ru -p 9292 -o 0.0.0.0
 ```
+### Sending Requests
+Once the proxy is running, requests can be sent from the client application to http://0.0.0.0:9292/ and they will be recorded and forwarded to the server.
 
-### Examples of Sending Requests
-
-#### Using Inferno
+##### Example - Sending Requests Using Inferno as Client
 
 For development purposes the Inferno tool can act as a FHIR 
 client and a public endpoint will be used as a FHIR server.
@@ -78,7 +78,7 @@ to the docker instance and not the host itself.
 
 2. Run tests. The database can be checked for logged HTTP transactions.
 
-#### Using Postman Requests
+##### Example - Using Postman to Send Requests
 We created a [collection of Postman requests](test/fhir-client-test.postman_collection.json) to simulate a client test.
 The tool [newman](https://www.npmjs.com/package/newman) can be used to send the collection of requests to the proxy server.
 
