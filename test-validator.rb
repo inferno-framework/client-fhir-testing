@@ -6,7 +6,6 @@ require_relative './CapabilityStatement-datamapper'
 require_relative './CapabilityStatement-db'
 require_relative './checklist-db'
 require_relative './parse-request'
-require_relative './validator-search'
 require_relative './datatypes-check'
 
 opts = YAML.load_file(File.join(File.dirname(__FILE__), 'proxy.yml'))
@@ -15,7 +14,6 @@ endpoint = URI::HTTP.build(host: opts[:Host], port: opts[:Port])
 # DataMapper.auto_migrate!
 DataMapper.auto_upgrade!
 
-include ValidSearch
 include CheckDatatypes
 
 # Put capability statements into checklist
