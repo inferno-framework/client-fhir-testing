@@ -18,93 +18,32 @@ DataMapper.auto_upgrade!
 include ValidSearch
 include CheckDatatypes
 
-# Get info from Interaction table to fill out Checklist table
-# quick fix -- only do this if checklist table is empty.
-# TODO: move this somewhere else where it'll only be called once
-if CheckList.count == 0
-  Interaction.each do |n|
-    resource = n.type #FHIR resource
-    interaction = n.code # interaction: read / vread / update / create / search-type
-    conformance_expectation = n.valueCode # interaction Code (SHALL/SHOULD/MAY)
-    expectation_met = false # boolean, parameter in list and response status is 200, default to False
-    request_ids = '' # Requests that demonstrated the requirement, default to none/empty string
-    CheckList.create resource: resource,
-                     interaction: interaction,
-                     conformance_expectation: conformance_expectation,
-                     expectation_met: expectation_met,
-                     request_ids: request_ids
-  end
-end
+# Put capability statements into checklist
+CheckList.initialize
 
-
-# resource: FHIR resource / action
-# request_type: read / vread / update / create / search-type
-# search_param: Array of search parameters. nil if not 'search-type'.
-# search_valid: boolean, whether search is valid (parameter in SHALL list and response status is 200)
-# search_combination: 1 parameter => nil; >1 parameters & find in the SHALL list => SHALL combinations; >1 parameters & not in the SHALL list => []
-# search_type: Array of boolean. whether each search value is valid for its data type. nil if not 'search-type'.
-# present: The matched serial id in the interaction table.
-# present_code: The matched interaction Code (SHALL/SHOULD/MAY) in the interaction table.
-# request_id: The original request ID from the request table in the database.
-# request_uri: The original request uri from the test requests.
-# response_status: The response status from server in the response table from database.
+# For each request, check if it's in US Core Capability Statement interaction table.
+# If it is and the request was successful, in the checklist:
+# - change requirement met = true, and
+# - add request id to checklist
 Request.each do |req|
   re = ParseRequest.new(req, endpoint.to_s)
   re.update
-  resource = re.req_resource
-  request_type = re.req_method
-  search_param = re.search_param
-  present = re.present
-  present_code = re.intCode
+  present = re.present # The matched serial id in the interaction table.
   request_id = req.request_id
-  request_uri = req.request_uri
   res = Response.last request_id: req.request_id
   response_status = res.status
 
   if present != 0
     record = CheckList.get(present)
-    # TODO: find a better way to store request_ids instead of a string in checklist table
+    # TODO: find a better way to store request_ids instead of a string in the checklist table
     # but for now check if this request_id is already listed by
     # checking substring
-    if !record.request_ids.include? (request_id.to_s + ",")
-      record.request_ids += (request_id.to_s + ",")
-    end
-
-    if response_status == "200"
+    if response_status.to_i >= 200 and response_status.to_i < 300 and !record.request_ids.include?(request_id.to_s + ",")
       record.expectation_met = true
+      record.request_ids += (request_id.to_s + ",")
     end
     record.save
   end
-
-  # search_valid = nil
-  # if re.search_param != nil
-  #   search_valid = (response_status == "200") and valid_shall(re.req_resource, re.search_param)
-  #   search_comb = combine_search(re.req_resource, re.search_param)
-  #
-  #   req_params = re.instance_variable_get(:@req_params)
-  #   param_type = []
-  #   req_params.each do |k, v|
-  #     sp = SearchParam.first type: re.req_resource, name: k
-  #     if sp.nil?
-  #       param_type.append(nil)
-  #     else
-  #       param_type.append(check_types(v, sp.stype))
-  #     end
-  #   end
-  # end
-
-  #
-  # CheckList.create resource: resource,
-  #                  request_type: request_type,
-  #                  search_param: search_param,
-  #                  search_valid: search_valid,
-  #                  search_combination: search_comb,
-  #                  search_type: param_type,
-  #                  present: present,
-  #                  present_code: present_code,
-  #                  request_id: request_id,
-  #                  request_uri: request_uri,
-  #                  response_status: response_status
 end
 
 # add column names in csv
