@@ -19,6 +19,7 @@ class FHIRProxy < Rack::Proxy
     @fhir_db = FHIRTransactionDB.new(@db_name)
     @fcDataMapper = FCDataMapper.new(@db_name)
     @fcDataMapper.mapJsonData
+
   end
 
   def call(env)
@@ -52,6 +53,81 @@ class FHIRProxy < Rack::Proxy
     #   msg_out('  encoding query string: ' + env['QUERY_STRING'])
     # end
 
+    # == filter request from UI to configure
+    request = Rack::Request.new(env)
+    if request.path.match('/fhirclient')
+      self.landingpage_mode = true
+    end
+    if request.path.match('/fc_config')
+      self.config_mode = true
+      @read_timeout = 240
+      @ssl_verify_none = true
+      myArray = request.query_string.split('destination=',2)
+      dst = myArray[1]
+      msg = %(@backend set to: #{dst})
+      if dst && URI(dst).is_a?(URI::HTTP) && dst.include?('http:')
+        @backend = URI(dst)
+        # @port shouldn't be needed and would break any http not on standard port
+        # Whether or not SSL is used is determined by ::Proxy based on http vs https
+        # @port = 80
+        msg_out(msg)
+      elsif  dst && URI(dst).is_a?(URI::HTTP) && dst.to_s.include?('https:')
+        @backend = URI(dst)
+        @use_ssl= true
+        # env["HTTP_X_FORWARDED_PROTO"] = 'https'
+        msg_out(msg)
+      end
+    end
+    if request.path.match('/fc_result')
+      self.result_mode = true
+      myArray = request.query_string.split('getResults=',2)
+      range = myArray[1]
+      msg = %(getting test result)
+
+      msg_out(msg)
+    end
+    if request.path.match('/fc_startSession')
+
+      myArray = request.query_string.split('setSwitch=',2)
+      flag = myArray[1]
+      if(flag =='on')
+        self.record_mode = true
+        msg = %(Start recording)
+        date = Time.new
+        #set 'date' equal to the current date/time.
+
+        date = date.day.to_s + "/" + date.month.to_s + "/" + date.year.to_s
+        time = Time.new
+        #set 'time' equal to the current time.
+        time = time.hour.to_s + ":" + time.min.to_s
+        @startTime = date + " " + time
+        @startId = @reportGen.getCountSessionID
+        puts @startId
+      else
+        self.record_mode = false
+        msg = %(Stop recording)
+        @endId = @reportGen.getCountSessionID + 1
+        puts @endId
+        startnum = @startId
+        endnum = @endId
+        if ( endnum - startnum > 0  )
+          msg = %(Adding session record)
+          @reportGen.insertSession(@startId, @endId,@startTime )
+        else
+          msg = %(No transactions to record)
+        end
+
+      end
+
+      msg_out(msg)
+    end
+    if self.config_mode != true
+      env['HTTP_HOST'] = @backend.host
+      env['REQUEST_PATH'] = @backend.path + request.fullpath
+      env['PATH_INFO'] = @backend.path + request.fullpath
+      msg_out('  forwarding to: ' + @backend.to_s)
+      msg_out('  ' + env.to_s, false)
+    end
     return env
   end
 
@@ -65,6 +141,21 @@ class FHIRProxy < Rack::Proxy
       # TODO: Do we want to handle redirects?  As a future item.
       # Would need to change headers['Location'] to point to proxy
       # and @backend would need to be updated
+    end
+    if self.config_mode  == true
+      msg_out('  config mode: ')
+
+      # if config mode is triprue ->
+      # overwrite status, headers, body to proper response based on what has been configured.
+      # As a default Proxy returns status 301. Change it to 200, fill proper header and body to return response back to UI.
+      # if status == 401
+      #   file = File.open("inferno.html")
+      #   msg_out(triplet[0])
+      #   msg_out(triplet[1])
+      #   triplet[0] = 200
+      # end
+
+      self.config_mode  = false
     end
     msg_out('  returning response to client')
     msg_out('  ' + status.to_s, false)
