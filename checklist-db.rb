@@ -24,6 +24,7 @@ class CheckList
   property :request_ids, String
 
   # If checklist table is empty, get info from Interaction table to initialize Checklist table
+  # otherwise just reset so that expectation_met is false for all requirements
   def self.initialize(attributes = nil)
     if CheckList.count == 0
         Interaction.each do |n|
@@ -38,7 +39,16 @@ class CheckList
                            expectation_met: expectation_met,
                            request_ids: request_ids
         end
+    else
+      Interaction.each do |n|
+        id = n.id
+        requirement = CheckList.get(id)
+        requirement.expectation_met = false
+        requirement.request_ids = ''
+        requirement.save
+        end
       end
     end
-end
+  end
+
 

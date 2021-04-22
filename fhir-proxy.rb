@@ -17,6 +17,8 @@ class FHIRProxy < Rack::Proxy
     File.open('log.txt', 'w') { |f| f.write "#{Time.now} - Proxy started.\n" }
     parse_myopts(myopts)
     @fhir_db = FHIRTransactionDB.new(@db_name)
+    @fcDataMapper = FCDataMapper.new(@db_name)
+    @fcDataMapper.mapJsonData
   end
 
   def call(env)
@@ -49,7 +51,6 @@ class FHIRProxy < Rack::Proxy
     #   env['QUERY_STRING'] = params_encoded
     #   msg_out('  encoding query string: ' + env['QUERY_STRING'])
     # end
-
 
     return env
   end
