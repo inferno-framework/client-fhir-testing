@@ -16,8 +16,8 @@ DataMapper.auto_upgrade!
 
 include CheckDatatypes
 
-# Put capability statements into checklist
-CheckList.initialize
+# # Put capability statements into checklist
+# CheckList.initialize
 
 # For each request, check if it's in US Core Capability Statement interaction table.
 # If it is and the request was successful, in the checklist:

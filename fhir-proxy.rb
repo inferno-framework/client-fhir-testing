@@ -1,6 +1,7 @@
 require 'rack-proxy'
 require 'json'
 require_relative 'fhir-transaction-db.rb'
+require_relative './checklist-db'
 require_relative 'data-Mapper'
 class FHIRProxy < Rack::Proxy
   attr_accessor :config_mode, :result_mode ,:record_mode, :landingpage_mode# global var
@@ -19,6 +20,8 @@ class FHIRProxy < Rack::Proxy
     @fhir_db = FHIRTransactionDB.new(@db_name)
     @fcDataMapper = FCDataMapper.new(@db_name)
     @fcDataMapper.mapJsonData
+    # Put capability statements into checklist and clear checklist
+    CheckList.initialize
 
   end
 
