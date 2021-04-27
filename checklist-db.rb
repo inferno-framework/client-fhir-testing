@@ -22,6 +22,7 @@ class CheckList
   property :conformance_expectation, String
   property :expectation_met, Boolean
   property :request_ids, String
+  property :search_param, String
 
   # If checklist table is empty, get info from Interaction table to initialize Checklist table
   # otherwise just reset so that expectation_met is false for all requirements
@@ -33,11 +34,13 @@ class CheckList
           conformance_expectation = n.valueCode # interaction Code (SHALL/SHOULD/MAY)
           expectation_met = false # boolean, parameter in list and response status is 200, default to False
           request_ids = '' # Requests that demonstrated the requirement, default to none/empty string
+          search_param = '' # Array of search parameters. nil if not 'search-type'
           CheckList.create resource: resource,
                            interaction: interaction,
                            conformance_expectation: conformance_expectation,
                            expectation_met: expectation_met,
-                           request_ids: request_ids
+                           request_ids: request_ids,
+                           search_param: search_param
         end
     else
       Interaction.each do |n|
@@ -45,6 +48,7 @@ class CheckList
         requirement = CheckList.get(id)
         requirement.expectation_met = false
         requirement.request_ids = ''
+        requirement.search_param = ''
         requirement.save
         end
       end
