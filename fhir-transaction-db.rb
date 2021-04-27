@@ -3,16 +3,17 @@ require 'sqlite3'
 class FHIRTransactionDB
   def initialize(file_name = 'data.db')
     @db = SQLite3::Database.new(file_name)
+    @db.execute("DROP TABLE IF EXISTS requests")
+    @db.execute("DROP TABLE IF EXISTS responses")
     sql = %{
       CREATE TABLE IF NOT EXISTS requests (
         request_id INTEGER PRIMARY KEY,
         request_method TEXT NOT NULL,
-        fhir_action TEXT NOT NULL,
         request_uri TEXT NOT NULL,
         remote_addr TEXT NOT NULL,
         user_agent TEXT NOT NULL,
         headers TEXT NOT NULL,
-        dt DATETIME default (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
+        timestamp DATETIME default (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
         data TEXT
       );
     }
@@ -23,7 +24,7 @@ class FHIRTransactionDB
         request_id INTEGER NOT NULL,
         status TEXT NOT NULL,
         headers TEXT NOT NULL,
-        dt DATETIME default (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
+        timestamp DATETIME default (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW')),
         data TEXT
       );
     }
@@ -52,20 +53,14 @@ class FHIRTransactionDB
     str_to_rm = URI(backend).path.chomp('/')
     removed_backend = headers['REQUEST_URI'].sub(/#{Regexp.escape(str_to_rm)}/, '')
     m = removed_backend.match(%r{^/([^/\?]+)/*.*$})
-    if m.nil? || m[1].nil?
-      # no regex match for action
-      fhir_action = "unknown"
-    else
-      fhir_action = m[1]
-    end
     sql = %{
       INSERT INTO requests
-      (request_method, fhir_action, request_uri, remote_addr, user_agent, headers, data)
+      (request_method, request_uri, remote_addr, user_agent, headers, data)
       VALUES
-      (?, ?, ?, ?, ?, ?, ?);
+      (?, ?, ?, ?, ?, ?);
     }
     ins = @db.prepare(sql)
-    ins.execute(request_method, fhir_action, request_uri, remote_addr,
+    ins.execute(request_method, request_uri, remote_addr,
                 user_agent, headers.to_json, data.to_s)
     return @db.last_insert_row_id
   end

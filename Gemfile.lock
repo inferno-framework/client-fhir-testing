@@ -1,0 +1,49 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.7.0)
+      public_suffix (>= 2.0.2, < 5.0)
+    data_objects (0.10.17)
+      addressable (~> 2.1)
+    dm-core (1.2.1)
+      addressable (~> 2.3)
+    dm-do-adapter (1.2.0)
+      data_objects (~> 0.10.6)
+      dm-core (~> 1.2.0)
+    dm-migrations (1.2.0)
+      dm-core (~> 1.2.0)
+    dm-sqlite-adapter (1.2.0)
+      dm-do-adapter (~> 1.2.0)
+      do_sqlite3 (~> 0.10.6)
+    do_sqlite3 (0.10.17)
+      data_objects (= 0.10.17)
+    json (2.5.1)
+    nokogiri (1.11.2-arm64-darwin)
+      racc (~> 1.4)
+    nokogiri (1.11.2-x86_64-darwin)
+      racc (~> 1.4)
+    public_suffix (4.0.6)
+    racc (1.5.2)
+    rack (2.2.3)
+    rack-proxy (0.6.5)
+      rack
+    rake (13.0.3)
+    sqlite3 (1.4.2)
+    yaml (0.1.1)
+
+PLATFORMS
+  universal-darwin-20
+
+DEPENDENCIES
+  dm-core
+  dm-migrations
+  dm-sqlite-adapter
+  json
+  nokogiri
+  rack-proxy
+  rake
+  sqlite3
+  yaml
+
+BUNDLED WITH
+   2.2.15

@@ -1,8 +1,7 @@
 require 'rack-proxy'
 require 'json'
 require_relative 'fhir-transaction-db.rb'
-require_relative  'generateReport'
-require_relative 'test-validator-gen'
+require_relative './checklist-db'
 require_relative 'data-Mapper'
 class FHIRProxy < Rack::Proxy
   attr_accessor :config_mode, :result_mode ,:record_mode, :landingpage_mode# global var
@@ -19,14 +18,11 @@ class FHIRProxy < Rack::Proxy
     File.open('log.txt', 'w') { |f| f.write "#{Time.now} - Proxy started.\n" }
     parse_myopts(myopts)
     @fhir_db = FHIRTransactionDB.new(@db_name)
-    @reportGen = ReportGen.new(@db_name)
     @fcDataMapper = FCDataMapper.new(@db_name)
     @fcDataMapper.mapJsonData
-    @validator = TestValidator.new(@db_name)
-    self.config_mode= false
-    self.record_mode= false
-    self.result_mode= false
-    self.landingpage_mode = false
+    # Put capability statements into checklist and clear checklist
+    CheckList.initialize
+
   end
 
   def call(env)
@@ -37,49 +33,10 @@ class FHIRProxy < Rack::Proxy
     # Client -> Proxy (Save req here) -> Server
     # Client <- (Save res here) Proxy <- Server
     new_env = rewrite_env(env)
-    if(self.landingpage_mode)
-      msg_out('  landingpage Mode: ' )
-      self.record_mode = false
-      file = File.open("Inferno.html")
-      status = 200
-      headers = { "Content-Type" => "text/html" }
-      #headers["content-length"] = file.size.to_s(10)
-      bodyHTML = [file.read]
-
-      body = bodyHTML
-      self.landingpage_mode = false
-      [status, headers, body]
-    elsif(self.result_mode)
-      status = 200
-      msg_out('  Result Mode: ' )
-      headers = { "Content-Type" => "application/json" }
-      #headers["content-length"] = file.size.to_s(10)
-      @validator.run_vaildation
-      jsonData = @reportGen.generateReport
-      msg_out('  Result Mode: ' + jsonData.to_s)
-      bodyHTML = [jsonData.to_s]
-
-      body = bodyHTML
-      puts body
-      self.result_mode = false
-      [status, headers, body]
-    elsif(self.record_mode)
-      msg_out('  record Mode: ' )
-      req_id = record_request(new_env)
-      res_triple = rewrite_response(perform_request(new_env))
-      res_id = record_response(res_triple, req_id)
-      self.record_mode = false
-      return res_triple
-    else
-      req_id = record_request(new_env)
-      res_triple = rewrite_response(perform_request(new_env))
-      res_id = record_response(res_triple, req_id)
-      return res_triple
-    end
-    # req_id = record_request(new_env)
-    # res_triple = rewrite_response(perform_request(new_env))
-    # res_id = record_response(res_triple, req_id)
-    # return res_triple
+    req_id = record_request(new_env)
+    res_triple = rewrite_response(perform_request(new_env))
+    res_id = record_response(res_triple, req_id)
+    return res_triple
   end
 
   def rewrite_env(env)
