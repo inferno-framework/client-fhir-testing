@@ -115,3 +115,4 @@ Here is the description of the report.
 |conformance_expectation|The matched [interaction](resources/CapabilityStatement_interaction.csv) Code (SHALL/SHOULD/MAY) in the interaction table.|
 |expectation_met|boolean, whether request is valid and response status is 200-299.|
 |request_ids|List of requests that demonstrate the requirement was met|
+|search_param|List of search parameters from the requests|
