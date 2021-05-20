@@ -58,6 +58,18 @@ backend as an environment variable.
 FHIR_PROXY_BACKEND="https://r4.smarthealthit.org" rackup config.ru -p 9292 -o 0.0.0.0
 ```
 
+### Docker
+
+Run the proxy and a test Inferno instance (and all of its requirements) using the Compose script:
+
+```sh
+docker-compose up --build
+```
+
+This will map in the `proxy.yml` from the `client-fhir-testing` folder. This way, you can update the proxy data without having to rebuild the image.
+
+In this compose file, Inferno is accessible at `http://localhost:4567`, and the proxy is available at `http://localhost:9292`.
+
 ### Run Inferno tests
 We use inferno as our client but you can use any client/server interactions 
 in this step. Note that the docker URL listed below resolves to the docker 

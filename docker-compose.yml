@@ -1,0 +1,17 @@
+version: '3'
+services:
+  proxy:
+    build:
+      context: ./
+    volumes:
+      - ./proxy.yml:/var/www/proxy/proxy.yml
+    ports:
+      - "9292:9292"
+  inferno:
+    image: onchealthit/inferno:release-latest
+    ports:
+     - "4567:4567"
+  bdt_service:
+    image: infernocommunity/inferno-bdt-service:release-latest
+  validator_service:
+    image: infernocommunity/fhir-validator-service:release-latest
