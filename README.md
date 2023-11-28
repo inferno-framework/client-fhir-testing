@@ -26,7 +26,7 @@ https://github.com/onc-healthit/inferno#installation-and-deployment
 
 3.  Run 
 ```sh
-docker-compose up
+docker compose up
 ```
 
 4.  open http://localhost:4567/
@@ -63,7 +63,7 @@ FHIR_PROXY_BACKEND="https://r4.smarthealthit.org" rackup config.ru -p 9292 -o 0.
 Run the proxy and a test Inferno instance (and all of its requirements) using the Compose script:
 
 ```sh
-docker-compose up --build
+docker compose up --build
 ```
 
 This will map in the `proxy.yml` from the `client-fhir-testing` folder. This way, you can update the proxy data without having to rebuild the image.
